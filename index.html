@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Capture Photo</title>
+  <style>
+    body { text-align: center; font-family: sans-serif; padding: 2rem; }
+    video, canvas { border: 1px solid black; margin: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Take a Picture</h1>
+  <video id="video" width="320" height="240" autoplay></video><br>
+  <button id="capture">Take Picture</button><br>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <p id="status"></p>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureButton = document.getElementById('capture');
+    const status = document.getElementById('status');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => console.error('Camera error:', err));
+
+    captureButton.onclick = () => {
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+
+      fetch('/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData })
+      })
+      .then(res => res.text())
+      .then(msg => status.textContent = msg)
+      .catch(err => status.textContent = 'Error uploading image');
+    };
+  </script>
+</body>
+</html>
