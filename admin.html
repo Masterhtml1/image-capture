@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login - Image Gallery</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    .hidden { display: none; }
+    .login, .gallery { max-width: 600px; margin: auto; }
+    input[type="password"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 100%;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+    .gallery img {
+      width: 100%;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login">
+    <h2>Enter Admin Password</h2>
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="verify()">Login</button>
+    <p id="error" style="color:red;"></p>
+  </div>
+
+  <div class="gallery hidden" id="gallery">
+    <h1>Uploaded Images</h1>
+    <div id="images"></div>
+  </div>
+
+  <script>
+    function verify() {
+      const pwd = document.getElementById('password').value;
+      fetch('/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Wrong password');
+        return res.json();
+      })
+      .then(() => {
+        document.querySelector('.login').classList.add('hidden');
+        document.getElementById('gallery').classList.remove('hidden');
+        loadImages();
+      })
+      .catch(() => {
+        document.getElementById('error').textContent = 'Incorrect password.';
+      });
+    }
+
+    function loadImages() {
+      fetch('/images-list')
+        .then(res => res.json())
+        .then(images => {
+          const container = document.getElementById('images');
+          images.forEach(filename => {
+            const img = document.createElement('img');
+            img.src = `/images/${filename}`;
+            container.appendChild(img);
+          });
+        });
+    }
+  </script>
+</body>
+</html>
